@@ -57,7 +57,7 @@ void load_and_run_elf(char* exe) {
         if(phdr[i].p_type==PT_LOAD && ((*ehdr).e_entry>=phdr[i].p_vaddr) && ((*ehdr).e_entry<=(phdr[i].p_vaddr+phdr[i].p_memsz))){
             void *segment=mmap((void *)phdr[i].p_vaddr, phdr[i].p_memsz,PROT_READ | PROT_WRITE | PROT_EXEC,MAP_PRIVATE | MAP_ANONYMOUS,0,0);
             if (segment == MAP_FAILED) {
-                perror("Error in mmap");
+                printf("Error in mmap");
                 free(heapmemalloc);
                 exit(1);
             }
@@ -75,6 +75,9 @@ void load_and_run_elf(char* exe) {
     _start();  // Jump to the entry point and start execution
 
     free(heapmemalloc);  // Free the allocated memory
+    close (fd);
+    int result = _start();
+    printf("User _start return value = %d\n",result);
 }
 
   // 3. Allocate memory of the size "p_memsz" using mmap function 
@@ -82,8 +85,7 @@ void load_and_run_elf(char* exe) {
   // 4. Navigate to the entrypoint address into the segment loaded in the memory in above step
   // 5. Typecast the address to that of function pointer matching "_start" method in fib.c.
  
-    int result = _start();
-    printf("User _start return value = %d\n",result);
+    
 
 }
 
