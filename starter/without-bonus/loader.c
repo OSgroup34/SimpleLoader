@@ -8,7 +8,10 @@ int fd;
  * release memory and other cleanups
  */
 void loader_cleanup() {
-  
+  ehdr=NULL;
+  free (ehdr);
+  phdr=NULL;
+  free (phdr);
 }
 
 /*
@@ -25,16 +28,16 @@ void load_and_run_elf(char* exe) {
     }
     lseek(fd,0,SEEK_SET);
     //entire file
-    char* heapmemalloc=(char*)malloc(fdsize);
+    char* heapmemalloc=(char*)malloc(size);
     //error handling
     if (!heapmemalloc){
         printf("error in memory allocation\n");
         exit(1);
     }
-    ssize_t readfile=read(fd, heapmemalloc, fdsize);
+    ssize_t readfile=read(fd, heapmemalloc,size);
 
     //error handling
-    if (readfile<0 || (size_t)readfile!=fd_size){
+    if (readfile<0 || (size_t)readfile!=size){
     perror("error in reading file");
     free(heapmemalloc);
     exit(1);
@@ -51,7 +54,7 @@ void load_and_run_elf(char* exe) {
   // 3. Allocate memory of the size "p_memsz" using mmap function 
         //    and then copy the segment content
     for (int i=0;i<phnum;i++){
-        if(phdr[i].p_type==PT_LOAD){
+        if(phdr[i].p_type==PT_LOAD && (ehdr->e_entry>=phdr[i].p_vaddr) && (ehdr->e_entry<=(phdr[i].p_vaddr + phdr[i].p_memsz))){
             void *segmem=mmap((void *)phdr[i].p_vaddr, phdr[i].p_memsz,PROT_READ | PROT_WRITE | PROT_EXEC,MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
             if (segmem == MAP_FAILED) {
                 perror("Error in mmap");
