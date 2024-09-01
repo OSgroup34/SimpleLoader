@@ -96,6 +96,13 @@ int main(int argc, char** argv)
     exit(1);
   }
   // 1. carry out necessary checks on the input ELF file
+  FILE *elfFile = fopen(argv[1], "rb");
+  if (!elfFile)
+  {
+    printf("Error: Not a valid ELF file.\n");
+    exit(1);
+  }
+  fclose(elfFile);
   // 2. passing it to the loader for carrying out the loading/execution
   load_and_run_elf(argv[1]);
   // 3. invoke the cleanup routine inside the loader  
