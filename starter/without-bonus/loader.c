@@ -55,24 +55,24 @@ void load_and_run_elf(char* exe) {
         //    and then copy the segment content
     for (int i=0;i<phnum;i++){
         if(phdr[i].p_type==PT_LOAD && ((*ehdr).e_entry>=phdr[i].p_vaddr) && ((*ehdr).e_entry<=(phdr[i].p_vaddr+phdr[i].p_memsz))){
-            void *segment=mmap((void *)phdr[i].p_vaddr, phdr[i].p_memsz,PROT_READ | PROT_WRITE | PROT_EXEC,MAP_PRIVATE | MAP_ANONYMOUS,0,0);
-            if (segment == MAP_FAILED) {
+            void* virtual_mem=mmap(NULL, phdr[i].p_memsz,PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANONYMOUS|MAP_PRIVATE,0,0);
+            if (virtual_mem==MAP_FAILED) {
                 printf("Error in mmap");
                 free(heapmemalloc);
                 exit(1);
             }
 
-            memcpy(segment, heapmemalloc + phdr[i].p_offset, phdr[i].p_memsz);
+            memcpy(virtual_mem,heapmemalloc+phdr[i].p_offset, phdr[i].p_memsz);
+            void* startAddress = virtual_mem+epaddress-(*phdr[i]).p_vaddr;
+            break;
           
         
         }
     }
 
     // 5. Typecast the entry point address to a function pointer
-    void (*_start)();
-    _start=(void (*)())epaddress;
+    int (*_start)(void) = (int (*)(void))startAddress;
   // 6. Call the "_start" method and print the value returned from the "_start"// 6. Call the entry point (typically "_start" in an ELF file)
-    _start();  // Jump to the entry point and start execution
 
     free(heapmemalloc);  // Free the allocated memory
     close (fd);
