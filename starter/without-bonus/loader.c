@@ -17,9 +17,9 @@ void loader_cleanup() {
 /*
  * Load and run the ELF executable file
  */
-void load_and_run_elf(char* exe) {
+void load_and_run_elf(char** exe) {
 // 1. Load entire binary content into the memory from the ELF file.
-    fd=open(exe, O_RDONLY);
+    fd=open(*exe, O_RDONLY);
     off_t size=lseek(fd,0,SEEK_END);
     //error handling
     if (size==-1){
@@ -50,6 +50,7 @@ void load_and_run_elf(char* exe) {
     unsigned int epaddress=(*ehdr).e_entry;
     int phdrsize=(*ehdr).e_phentsize;
     int phnum=(*ehdr).e_phnum;
+    void* startAddress;
     
   // 3. Allocate memory of the size "p_memsz" using mmap function 
         //    and then copy the segment content
@@ -63,7 +64,7 @@ void load_and_run_elf(char* exe) {
             }
 
             memcpy(virtual_mem,heapmemalloc+phdr[i].p_offset, phdr[i].p_memsz);
-            void* startAddress = virtual_mem+epaddress-(*phdr[i]).p_vaddr;
+            startAddress = virtual_mem+epaddress-phdr[i].p_vaddr;
             break;
           
         
@@ -87,7 +88,7 @@ void load_and_run_elf(char* exe) {
  
     
 
-}
+
 
 int main(int argc, char** argv) 
 {
@@ -96,15 +97,8 @@ int main(int argc, char** argv)
     exit(1);
   }
   // 1. carry out necessary checks on the input ELF file
-  FILE *elfFile = fopen(argv[1], "rb");
-  if (!elfFile)
-  {
-    printf("Error: Not a valid ELF file.\n");
-    exit(1);
-  }
-  fclose(elfFile);
   // 2. passing it to the loader for carrying out the loading/execution
-  load_and_run_elf(argv[1]);
+  load_and_run_elf(&argv[1]);
   // 3. invoke the cleanup routine inside the loader  
   loader_cleanup();
   return 0;
