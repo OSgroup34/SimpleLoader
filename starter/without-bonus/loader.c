@@ -83,10 +83,6 @@ void load_and_run_elf(char** exe) {
 }
 
   
-    
-
-
-
 int main(int argc, char** argv) 
 {
   if(argc != 2) {
@@ -94,11 +90,11 @@ int main(int argc, char** argv)
     exit(1);
   }
   // 1. carry out necessary checks on the input ELF file
-  FILE* ELFfile=fopen(argv[1],'rb');
+  FILE* ELFfile=fopen(argv[1],"rb");
   if (!ELFfile){
-    printf("Error in opening ELF file);
+    printf("Error in opening ELF file");
     exit(1);}
-  close (ELFfile);
+  fclose (ELFfile);
   // 2. passing it to the loader for carrying out the loading/execution
   load_and_run_elf(&argv[1]);
   // 3. invoke the cleanup routine inside the loader  
