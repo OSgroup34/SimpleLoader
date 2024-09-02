@@ -23,11 +23,11 @@ void load_and_run_elf(char** exe) {
     off_t size=lseek(fd,0,SEEK_END);
     //error handling
     if (size==-1){
-        printf("error in file size\n");
+        printf("Error in getting file size\n");
         exit(1);
     }
     lseek(fd,0,SEEK_SET);
-    //entire file
+    //entire file memory allocation
     char* heapmemalloc=(char*)malloc(size);
     //error handling
     if (!heapmemalloc){
@@ -38,7 +38,7 @@ void load_and_run_elf(char** exe) {
 
     //error handling
     if (readfile<0 || (size_t)readfile!=size){
-    perror("error in reading file");
+    perror("Error in reading file");
     free(heapmemalloc);
     exit(1);
     }
@@ -51,20 +51,22 @@ void load_and_run_elf(char** exe) {
     int phdrsize=(*ehdr).e_phentsize;
     int phnum=(*ehdr).e_phnum;
     void* startAddress;
+    Elf32_Phdr currphdr;
     
   // 3. Allocate memory of the size "p_memsz" using mmap function 
         //    and then copy the segment content
     for (int i=0;i<phnum;i++){
-        if(phdr[i].p_type==PT_LOAD && ((*ehdr).e_entry>=phdr[i].p_vaddr) && ((*ehdr).e_entry<=(phdr[i].p_vaddr+phdr[i].p_memsz))){
-            void* virtual_mem=mmap(NULL, phdr[i].p_memsz,PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANONYMOUS|MAP_PRIVATE,0,0);
+        currphdr=phdr[i];
+        if(currphdr.p_type==PT_LOAD && (epaddress>=currphdr.p_vaddr) && (epaddress<=(currphdr.p_vaddr+currphdr.p_memsz))){
+            void* virtual_mem=mmap(NULL, currphdr.p_memsz,PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANONYMOUS|MAP_PRIVATE,0,0);
             if (virtual_mem==MAP_FAILED) {
                 printf("Error in mmap");
                 free(heapmemalloc);
                 exit(1);
             }
 
-            memcpy(virtual_mem,heapmemalloc+phdr[i].p_offset, phdr[i].p_memsz);
-            startAddress = virtual_mem+epaddress-phdr[i].p_vaddr;
+            memcpy(virtual_mem,heapmemalloc+currphdr.p_offset, currphdr.p_memsz);
+            startAddress = virtual_mem+epaddress-currphdr.p_vaddr;
             break;
           
         
@@ -73,19 +75,14 @@ void load_and_run_elf(char** exe) {
 
     // 5. Typecast the entry point address to a function pointer
     int (*_start)(void) = (int (*)(void))startAddress;
-  // 6. Call the "_start" method and print the value returned from the "_start"// 6. Call the entry point (typically "_start" in an ELF file)
-
-    free(heapmemalloc);  // Free the allocated memory
-    close (fd);
+  // 6. Call the "_start" method and print the value returned from the "_start"
     int result = _start();
     printf("User _start return value = %d\n",result);
+    free(heapmemalloc);
+    close (fd);
 }
 
-  // 3. Allocate memory of the size "p_memsz" using mmap function 
-  //    and then copy the segment content
-  // 4. Navigate to the entrypoint address into the segment loaded in the memory in above step
-  // 5. Typecast the address to that of function pointer matching "_start" method in fib.c.
- 
+  
     
 
 
@@ -97,6 +94,11 @@ int main(int argc, char** argv)
     exit(1);
   }
   // 1. carry out necessary checks on the input ELF file
+  FILE* ELFfile=fopen(argv[1],'rb');
+  if (!ELFfile){
+    printf("Error in opening ELF file);
+    exit(1);}
+  close (ELFfile)
   // 2. passing it to the loader for carrying out the loading/execution
   load_and_run_elf(&argv[1]);
   // 3. invoke the cleanup routine inside the loader  
