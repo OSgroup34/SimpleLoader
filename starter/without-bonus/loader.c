@@ -98,7 +98,7 @@ int main(int argc, char** argv)
   if (!ELFfile){
     printf("Error in opening ELF file);
     exit(1);}
-  close (ELFfile)
+  close (ELFfile);
   // 2. passing it to the loader for carrying out the loading/execution
   load_and_run_elf(&argv[1]);
   // 3. invoke the cleanup routine inside the loader  
